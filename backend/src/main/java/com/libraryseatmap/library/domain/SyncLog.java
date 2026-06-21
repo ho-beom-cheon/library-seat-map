@@ -1,5 +1,6 @@
 package com.libraryseatmap.library.domain;
 
+import java.time.Duration;
 import java.time.Instant;
 
 import jakarta.persistence.Column;
@@ -67,6 +68,32 @@ public class SyncLog {
 		this.status = status;
 		this.startedAt = startedAt;
 		this.finishedAt = finishedAt;
+	}
+
+	public static SyncLog finished(String endpoint, String stdgCd, String district, String status, Integer httpStatus,
+			String resultCode, String resultMessage, int rowCount, Instant startedAt, Instant finishedAt,
+			String errorMessage) {
+		SyncLog log = new SyncLog(endpoint, status, startedAt, finishedAt);
+		log.stdgCd = stdgCd;
+		log.district = district;
+		log.httpStatus = httpStatus;
+		log.resultCode = resultCode;
+		log.resultMessage = resultMessage;
+		log.rowCount = rowCount;
+		log.durationMs = durationMs(startedAt, finishedAt);
+		log.errorMessage = errorMessage;
+		return log;
+	}
+
+	private static int durationMs(Instant startedAt, Instant finishedAt) {
+		long duration = Duration.between(startedAt, finishedAt).toMillis();
+		if (duration > Integer.MAX_VALUE) {
+			return Integer.MAX_VALUE;
+		}
+		if (duration < 0) {
+			return 0;
+		}
+		return (int) duration;
 	}
 
 	public Long getId() {

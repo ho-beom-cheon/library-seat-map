@@ -8,6 +8,8 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
+import com.libraryseatmap.publicapi.dto.LibraryInfoItem;
+
 @Entity
 @Table(name = "libraries")
 public class Library {
@@ -91,6 +93,39 @@ public class Library {
 	public Library(String libraryId, String name) {
 		this.libraryId = libraryId;
 		this.name = name;
+	}
+
+	public void applyLibraryInfo(LibraryInfoItem item, Instant syncedAt) {
+		this.name = item.name();
+		this.sourceStdgCd = item.sourceStdgCd();
+		this.city = item.city();
+		this.district = item.district();
+		this.libraryType = item.libraryType();
+		this.address = item.address();
+		this.operatorName = item.operatorName();
+		this.phone = item.phone();
+		this.homepageUrl = item.homepageUrl();
+		this.latitude = item.latitude();
+		this.longitude = item.longitude();
+		this.closedInfo = item.closedInfo();
+		this.weekdayOpenTime = item.weekdayOpenTime();
+		this.weekdayCloseTime = item.weekdayCloseTime();
+		this.weekendOpenTime = item.weekendOpenTime();
+		this.weekendCloseTime = item.weekendCloseTime();
+		this.holidayOpenTime = item.holidayOpenTime();
+		this.holidayCloseTime = item.holidayCloseTime();
+		this.totalSeatsReported = item.totalSeatsReported();
+		this.baseDate = item.baseDate();
+		this.lastInfoSyncedAt = syncedAt;
+	}
+
+	public void applyRealtimeSeed(String name, String sourceStdgCd) {
+		if (name != null && !name.isBlank()) {
+			this.name = name;
+		}
+		if (sourceStdgCd != null && !sourceStdgCd.isBlank()) {
+			this.sourceStdgCd = sourceStdgCd;
+		}
 	}
 
 	public String getLibraryId() {

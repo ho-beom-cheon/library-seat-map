@@ -1,0 +1,17 @@
+spring:
+  application:
+    name: library-seat-map-backend
+
+server:
+  port: 8080
+
+library:
+  public-api:
+    base-url: ${PUBLIC_API_BASE_URL:https://apis.data.go.kr/B551982/plr_v2}
+    response-type: ${PUBLIC_API_RESPONSE_TYPE:json}
+  sync:
+    enabled: ${LIBRARY_SYNC_ENABLED:false}
+    districts: ${LIBRARY_SYNC_DISTRICTS:1168000000}
+
+app:
+  location-logging-enabled: ${APP_LOCATION_LOGGING_ENABLED:false}

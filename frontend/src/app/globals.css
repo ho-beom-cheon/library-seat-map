@@ -1,0 +1,103 @@
+:root {
+  color-scheme: light;
+  --background: #f7f8fa;
+  --foreground: #1f2933;
+  --muted: #65748b;
+  --line: #d8dee9;
+  --panel: #ffffff;
+  --accent: #1b7f5f;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--background);
+  color: var(--foreground);
+  font-family:
+    Arial,
+    "Noto Sans KR",
+    sans-serif;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+.app-shell {
+  min-height: 100vh;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+}
+
+.topbar {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 12px;
+  border-bottom: 1px solid var(--line);
+  background: var(--panel);
+}
+
+.search-input {
+  min-width: 0;
+  flex: 1;
+  height: 40px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0 12px;
+}
+
+.location-button {
+  height: 40px;
+  border: 1px solid var(--accent);
+  border-radius: 8px;
+  padding: 0 12px;
+  background: var(--accent);
+  color: #ffffff;
+}
+
+.map-stage {
+  position: relative;
+  min-height: 360px;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+}
+
+.map-placeholder {
+  width: min(100%, 720px);
+  min-height: 280px;
+  border: 1px dashed #9aa8bc;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: #eef3f7;
+  text-align: center;
+}
+
+.panel {
+  border-top: 1px solid var(--line);
+  background: var(--panel);
+  padding: 16px;
+}
+
+.panel h1,
+.panel p {
+  margin: 0;
+}
+
+.panel h1 {
+  font-size: 20px;
+  line-height: 1.35;
+}
+
+.panel p {
+  margin-top: 8px;
+  color: var(--muted);
+  line-height: 1.5;
+}

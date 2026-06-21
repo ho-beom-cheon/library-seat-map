@@ -9,6 +9,9 @@ library:
   public-api:
     base-url: ${PUBLIC_API_BASE_URL:https://apis.data.go.kr/B551982/plr_v2}
     response-type: ${PUBLIC_API_RESPONSE_TYPE:json}
+    service-key: ${DATA_GO_KR_SERVICE_KEY:}
+    key-encoded: ${DATA_GO_KR_KEY_IS_ENCODED:false}
+    num-of-rows: ${PUBLIC_API_NUM_OF_ROWS:500}
   sync:
     enabled: ${LIBRARY_SYNC_ENABLED:false}
     districts: ${LIBRARY_SYNC_DISTRICTS:1168000000}

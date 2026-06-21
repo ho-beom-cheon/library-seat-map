@@ -76,6 +76,15 @@ public class SeatSnapshot {
 		this.usageRate = usageRate;
 	}
 
+	public SeatSnapshot(String libraryId, UUID roomId, Instant observedAt, String rawObservedValue,
+			Integer currentVisitorCount, Integer totalSeats, Integer usedSeats, Integer reservedSeats,
+			Integer availableSeats, BigDecimal usageRate) {
+		this(libraryId, roomId, observedAt, totalSeats, usedSeats, availableSeats, usageRate);
+		this.rawObservedValue = rawObservedValue;
+		this.currentVisitorCount = currentVisitorCount;
+		this.reservedSeats = reservedSeats;
+	}
+
 	public Long getId() {
 		return id;
 	}

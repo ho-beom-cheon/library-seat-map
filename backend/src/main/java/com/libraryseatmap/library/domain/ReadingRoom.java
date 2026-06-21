@@ -11,6 +11,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 
+import com.libraryseatmap.publicapi.dto.RealtimeReadingRoomItem;
+
 @Entity
 @Table(
 		name = "reading_rooms",
@@ -62,6 +64,16 @@ public class ReadingRoom {
 		this.libraryId = libraryId;
 		this.roomExternalId = roomExternalId;
 		this.roomName = roomName;
+	}
+
+	public void applyRealtimeRoom(RealtimeReadingRoomItem item, Integer totalSeats, Instant syncedAt) {
+		this.roomNo = item.roomNo();
+		this.roomName = item.roomName();
+		this.roomType = item.roomType();
+		this.floorInfo = item.floorInfo();
+		this.sourceStdgCd = item.sourceStdgCd();
+		this.totalSeats = totalSeats;
+		this.lastSyncedAt = syncedAt;
 	}
 
 	public UUID getId() {

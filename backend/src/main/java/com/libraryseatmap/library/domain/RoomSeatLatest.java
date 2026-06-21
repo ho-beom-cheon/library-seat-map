@@ -66,6 +66,20 @@ public class RoomSeatLatest {
 		this.freshnessStatus = freshnessStatus;
 	}
 
+	public void updateSeatState(Instant observedAt, Instant collectedAt, Integer currentVisitorCount,
+			Integer totalSeats, Integer usedSeats, Integer reservedSeats, Integer availableSeats,
+			BigDecimal usageRate, String freshnessStatus) {
+		this.observedAt = observedAt;
+		this.collectedAt = collectedAt;
+		this.currentVisitorCount = currentVisitorCount;
+		this.totalSeats = totalSeats;
+		this.usedSeats = usedSeats;
+		this.reservedSeats = reservedSeats;
+		this.availableSeats = availableSeats;
+		this.usageRate = usageRate;
+		this.freshnessStatus = freshnessStatus;
+	}
+
 	public UUID getRoomId() {
 		return roomId;
 	}

@@ -23,6 +23,20 @@
 curl.exe "http://localhost:8080/api/health"
 ```
 
+데모 데이터를 바로 적재하려면 `.env`에 공공데이터 서비스키와 `LIBRARY_SYNC_MANUAL_TRIGGER_ENABLED=true`를 설정한 뒤 다음 명령을 실행합니다.
+
+```powershell
+curl.exe -X POST "http://localhost:8080/api/sync/run"
+```
+
+기본 스케줄만 사용할 경우 도서관 기본 정보는 매일 03:10에 적재되고, 실시간 열람실 좌석 정보는 백엔드 실행 후 고정 주기로 갱신됩니다. 시연 직전에는 수동 동기화 명령을 사용합니다.
+
+동기화 상태:
+
+```powershell
+curl.exe "http://localhost:8080/api/sync/status"
+```
+
 데이터가 비어 있으면 지도와 추천 결과가 비어 보일 수 있습니다. 이 경우 공공데이터 서비스키와 동기화 설정을 먼저 확인합니다.
 
 ## 로컬 실행 순서

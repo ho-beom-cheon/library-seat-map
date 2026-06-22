@@ -125,6 +125,7 @@ npm run dev
 | `PUBLIC_API_BASE_URL` | backend | 공공도서관 API 기본 URL |
 | `LIBRARY_SYNC_ENABLED` | backend | 스케줄러 기반 동기화 사용 여부 |
 | `LIBRARY_SYNC_DISTRICTS` | backend | 동기화 대상 행정구역 코드 목록 |
+| `LIBRARY_SYNC_MANUAL_TRIGGER_ENABLED` | backend | 로컬 데모용 수동 동기화 API 사용 여부 |
 | `SPRING_DATASOURCE_URL` | backend | PostgreSQL JDBC URL |
 | `SPRING_DATASOURCE_USERNAME` | backend | PostgreSQL 사용자 |
 | `SPRING_DATASOURCE_PASSWORD` | backend | PostgreSQL 비밀번호 |
@@ -140,6 +141,20 @@ npm run dev
 
 ```powershell
 curl.exe "http://localhost:8080/api/health"
+```
+
+로컬 데모에서 데이터를 즉시 적재하려면 `.env`에 공공데이터 서비스키를 넣고 `LIBRARY_SYNC_MANUAL_TRIGGER_ENABLED=true`를 설정한 뒤 다음 명령을 실행합니다.
+
+```powershell
+curl.exe -X POST "http://localhost:8080/api/sync/run"
+```
+
+기본 설정 기준으로 도서관 기본 정보는 매일 03:10에 스케줄 동기화되고, 열람실 실시간 좌석 정보는 백엔드 실행 후 고정 주기로 갱신됩니다. 수동 동기화 API는 이 대기 시간을 줄이기 위한 로컬 데모용 트리거입니다.
+
+동기화 상태는 다음 명령으로 확인합니다.
+
+```powershell
+curl.exe "http://localhost:8080/api/sync/status"
 ```
 
 ```powershell

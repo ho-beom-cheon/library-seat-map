@@ -49,12 +49,16 @@ type LibraryDetail = LibraryItem & {
 type ReadingRoom = {
   roomId: string;
   roomName: string;
+  roomType: string | null;
   floorInfo: string | null;
   totalSeats: number | null;
   usedSeats: number | null;
+  reservedSeats: number | null;
   availableSeats: number | null;
+  usageRate: number | string | null;
   markerState: MarkerState;
   dataFreshness: string | null;
+  observedAt: string | null;
   lastSyncedAt: string | null;
 };
 
@@ -123,6 +127,9 @@ export default function Home() {
     () => items.find((item) => item.libraryId === ui.selectedId) ?? null,
     [items, ui.selectedId],
   );
+
+  const detailItem =
+    selectedItem && ui.detail ? { ...selectedItem, ...ui.detail } : selectedItem;
 
   const mapBounds = useMemo(() => getMapBounds(items, position), [items, position]);
 
@@ -408,8 +415,8 @@ export default function Home() {
       </div>
 
       <section className="detail-drawer" aria-label="선택한 도서관 상세 정보">
-        {selectedItem ? (
-          <LibraryDetailCard item={ui.detail ?? selectedItem} />
+        {detailItem ? (
+          <LibraryDetailCard item={detailItem} />
         ) : (
           <div className="detail-empty">
             지도 마커나 목록을 선택하면 도서관별 좌석 상태를 볼 수 있습니다.
@@ -422,6 +429,7 @@ export default function Home() {
 
 function LibraryDetailCard({ item }: { item: LibraryItem | LibraryDetail }) {
   const rooms = "rooms" in item ? item.rooms : [];
+  const navigationUrl = navigationUrlFor(item);
 
   return (
     <div className="detail-content">
@@ -429,7 +437,8 @@ function LibraryDetailCard({ item }: { item: LibraryItem | LibraryDetail }) {
         <span className={`state-chip chip-${stateTone(item.markerState)}`}>
           {markerLabel(item.markerState)}
         </span>
-        <div>
+        <div className="detail-title">
+          <p className="eyebrow">{operationStatusLabel(item.operationStatus)}</p>
           <h2>{item.name}</h2>
           <p>{item.address ?? "주소 정보 없음"}</p>
         </div>
@@ -441,34 +450,71 @@ function LibraryDetailCard({ item }: { item: LibraryItem | LibraryDetail }) {
           <dd>{seatSummary(item)}</dd>
         </div>
         <div>
-          <dt>도보</dt>
-          <dd>{formatWalk(item.estimatedWalkMinutes)}</dd>
+          <dt>거리</dt>
+          <dd>{formatTravel(item.distanceMeters, item.estimatedWalkMinutes)}</dd>
         </div>
         <div>
-          <dt>갱신</dt>
-          <dd>{formatSyncedAt(item.lastSyncedAt)}</dd>
+          <dt>최근 갱신</dt>
+          <dd>{formatSyncedAt(item.lastSyncedAt)} 기준</dd>
+        </div>
+        <div>
+          <dt>만석 위험</dt>
+          <dd>{riskLevelLabel(item.markerState)}</dd>
         </div>
       </dl>
 
-      <p className="detail-copy">
-        {item.recommendReason ??
-          "좌석 상태는 최근 갱신 기준의 가능성 정보이며 실제 현장 상황과 다를 수 있습니다."}
-      </p>
+      <div className="detail-side">
+        <p className="detail-copy">
+          {item.recommendReason ??
+            "좌석 상태는 최근 갱신 기준의 가능성 정보이며 실제 현장 상황과 다를 수 있습니다."}
+        </p>
+        <p className={`freshness-line freshness-${freshnessTone(item.dataFreshness)}`}>
+          {freshnessText(item.dataFreshness)}
+        </p>
+        <a
+          className="navigation-button"
+          href={navigationUrl}
+          rel="noreferrer"
+          target="_blank"
+        >
+          길찾기
+        </a>
+      </div>
 
       {rooms.length > 0 ? (
-        <div className="room-list" aria-label="열람실별 좌석">
-          {rooms.slice(0, 4).map((room) => (
+        <div className="room-section">
+          <div className="room-heading">
+            <h3>열람실 현황</h3>
+            <span>최근 갱신 기준</span>
+          </div>
+          <div className="room-list" aria-label="열람실별 좌석">
+            {rooms.map((room) => (
             <div className="room-row" key={room.roomId}>
-              <span>
+              <span className="room-name">
                 <strong>{room.roomName}</strong>
-                {room.floorInfo ? ` · ${room.floorInfo}` : ""}
+                <small>{roomSubText(room)}</small>
               </span>
-              <span>{seatSummary(room)}</span>
+              <span className={`state-chip chip-${stateTone(room.markerState)}`}>
+                {markerLabel(room.markerState)}
+              </span>
+              <span className="room-seat">{seatSummary(room)}</span>
+              <span className={`freshness-line freshness-${freshnessTone(room.dataFreshness)}`}>
+                {freshnessText(room.dataFreshness)}
+              </span>
             </div>
-          ))}
+            ))}
+          </div>
         </div>
       ) : (
-        <p className="room-empty">열람실별 세부 좌석 정보는 아직 표시할 수 없습니다.</p>
+        <div className="room-section">
+          <div className="room-heading">
+            <h3>열람실 현황</h3>
+            <span>최근 갱신 기준</span>
+          </div>
+          <p className="room-empty">
+            열람실별 세부 좌석 정보는 아직 표시할 수 없습니다.
+          </p>
+        </div>
       )}
     </div>
   );
@@ -582,6 +628,51 @@ function stateTone(markerState: MarkerState) {
   return "muted";
 }
 
+function operationStatusLabel(status?: string | null) {
+  if (status === "OPEN") {
+    return "현재 상태: 운영 중";
+  }
+  if (status === "CLOSING_SOON") {
+    return "현재 상태: 운영 종료 임박";
+  }
+  if (status === "CLOSED") {
+    return "현재 상태: 운영 종료";
+  }
+  return "현재 상태: 확인 필요";
+}
+
+function riskLevelLabel(markerState: MarkerState) {
+  if (markerState === "AVAILABLE") {
+    return "낮음";
+  }
+  if (markerState === "MODERATE") {
+    return "보통";
+  }
+  if (markerState === "CROWDED") {
+    return "높음";
+  }
+  if (markerState === "FULL_RISK" || markerState === "FULL") {
+    return "매우 높음";
+  }
+  if (markerState === "CLOSED") {
+    return "운영 상태 확인";
+  }
+  return "확인 필요";
+}
+
+function freshnessTone(dataFreshness: string | null) {
+  if (dataFreshness === "FRESH") {
+    return "good";
+  }
+  if (dataFreshness === "STALE") {
+    return "warn";
+  }
+  if (dataFreshness === "EXPIRED") {
+    return "danger";
+  }
+  return "muted";
+}
+
 function seatSummary(item: Pick<LibraryItem | ReadingRoom, "availableSeats" | "totalSeats">) {
   if (item.availableSeats === null || item.availableSeats === undefined) {
     return "좌석 정보 없음";
@@ -592,6 +683,11 @@ function seatSummary(item: Pick<LibraryItem | ReadingRoom, "availableSeats" | "t
   }
 
   return `최근 기준 ${item.availableSeats}/${item.totalSeats}석 가능성`;
+}
+
+function roomSubText(room: ReadingRoom) {
+  const parts = [room.roomType, room.floorInfo].filter(Boolean);
+  return parts.length > 0 ? parts.join(" · ") : "열람실 정보";
 }
 
 function noticeText(ui: UiState, items: LibraryItem[]) {
@@ -608,8 +704,14 @@ function noticeText(ui: UiState, items: LibraryItem[]) {
 }
 
 function freshnessText(dataFreshness: string | null) {
+  if (dataFreshness === "FRESH") {
+    return "최근 갱신된 좌석 데이터입니다.";
+  }
   if (dataFreshness === "STALE") {
     return "갱신 지연 데이터입니다.";
+  }
+  if (dataFreshness === "EXPIRED") {
+    return "오래된 데이터라 현장 상황과 다를 수 있습니다.";
   }
   if (dataFreshness === "NO_DATA") {
     return "좌석 데이터가 아직 없습니다.";
@@ -634,6 +736,32 @@ function formatWalk(minutes?: number | null) {
   return `약 ${minutes}분`;
 }
 
+function formatTravel(distanceMeters?: number | null, walkMinutes?: number | null) {
+  const distance = formatDistanceValue(distanceMeters);
+  const walk = formatWalk(walkMinutes);
+
+  if (distance === "거리 정보 없음" && walk === "거리 정보 없음") {
+    return "거리 정보 없음";
+  }
+  if (distance === "거리 정보 없음") {
+    return walk;
+  }
+  if (walk === "거리 정보 없음") {
+    return distance;
+  }
+  return `${distance} / 도보 ${walk}`;
+}
+
+function formatDistanceValue(distanceMeters?: number | null) {
+  if (distanceMeters === null || distanceMeters === undefined) {
+    return "거리 정보 없음";
+  }
+  if (distanceMeters >= 1000) {
+    return `${(distanceMeters / 1000).toFixed(1)}km`;
+  }
+  return `${distanceMeters}m`;
+}
+
 function formatSyncedAt(value: string | null) {
   if (!value) {
     return "갱신 정보 없음";
@@ -652,4 +780,17 @@ function formatClock(value: Date) {
     hour: "2-digit",
     minute: "2-digit",
   }).format(value);
+}
+
+function navigationUrlFor(item: Pick<LibraryItem, "name" | "address" | "lat" | "lng">) {
+  const lat = Number(item.lat);
+  const lng = Number(item.lng);
+  const label = encodeURIComponent(item.name);
+
+  if (Number.isFinite(lat) && Number.isFinite(lng)) {
+    return `https://map.kakao.com/link/to/${label},${lat},${lng}`;
+  }
+
+  const query = encodeURIComponent(`${item.name} ${item.address ?? ""}`.trim());
+  return `https://map.kakao.com/?q=${query}`;
 }

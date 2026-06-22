@@ -13,6 +13,7 @@ public class LibrarySyncProperties {
 	private String infoCron = "0 10 3 * * *";
 	private long realtimeDelayMs = 120_000L;
 	private boolean operationStatusEnabled;
+	private boolean manualTriggerEnabled;
 	private String districts = "1168000000";
 
 	public boolean isEnabled() {
@@ -45,6 +46,14 @@ public class LibrarySyncProperties {
 
 	public void setOperationStatusEnabled(boolean operationStatusEnabled) {
 		this.operationStatusEnabled = operationStatusEnabled;
+	}
+
+	public boolean isManualTriggerEnabled() {
+		return manualTriggerEnabled;
+	}
+
+	public void setManualTriggerEnabled(boolean manualTriggerEnabled) {
+		this.manualTriggerEnabled = manualTriggerEnabled;
 	}
 
 	public String getDistricts() {

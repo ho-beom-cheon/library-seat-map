@@ -27,6 +27,7 @@ library:
     info-cron: ${LIBRARY_SYNC_INFO_CRON:0 10 3 * * *}
     realtime-delay-ms: ${LIBRARY_SYNC_REALTIME_DELAY_MS:120000}
     operation-status-enabled: ${LIBRARY_SYNC_OPERATION_STATUS_ENABLED:false}
+    manual-trigger-enabled: ${LIBRARY_SYNC_MANUAL_TRIGGER_ENABLED:false}
     districts: ${LIBRARY_SYNC_DISTRICTS:1168000000}
 
 app:

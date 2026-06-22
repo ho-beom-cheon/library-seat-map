@@ -34,4 +34,24 @@ public final class SyncStatusDto {
 			boolean hasError
 	) {
 	}
+
+	public record ManualSyncRunResponse(
+			String status,
+			Instant startedAt,
+			Instant finishedAt,
+			int processedRows,
+			int skippedRows,
+			List<ManualSyncRunItemResponse> runs
+	) {
+	}
+
+	public record ManualSyncRunItemResponse(
+			String endpoint,
+			String district,
+			String stdgCd,
+			String status,
+			int processedRows,
+			int skippedRows
+	) {
+	}
 }

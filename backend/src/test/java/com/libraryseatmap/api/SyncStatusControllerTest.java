@@ -1,12 +1,17 @@
 package com.libraryseatmap.api;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.mockito.Mockito.reset;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.List;
 import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -14,6 +19,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,6 +34,10 @@ import com.libraryseatmap.library.repository.RoomSeatLatestRepository;
 import com.libraryseatmap.library.repository.SyncLogRepository;
 import com.libraryseatmap.publicapi.dto.LibraryInfoItem;
 import com.libraryseatmap.publicapi.dto.RealtimeReadingRoomItem;
+import com.libraryseatmap.sync.LibrarySyncProperties;
+import com.libraryseatmap.sync.LibrarySyncService;
+import com.libraryseatmap.sync.SyncRunResult;
+import com.libraryseatmap.sync.SyncTargetDistrict;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -39,6 +49,12 @@ class SyncStatusControllerTest {
 
 	@Autowired
 	private TtlResponseCache responseCache;
+
+	@Autowired
+	private LibrarySyncProperties syncProperties;
+
+	@MockitoBean
+	private LibrarySyncService librarySyncService;
 
 	@Autowired
 	private LibraryRepository libraryRepository;
@@ -55,6 +71,8 @@ class SyncStatusControllerTest {
 	@BeforeEach
 	void clearCache() {
 		responseCache.clear();
+		syncProperties.setManualTriggerEnabled(false);
+		reset(librarySyncService);
 	}
 
 	@Test
@@ -84,6 +102,36 @@ class SyncStatusControllerTest {
 				.andExpect(jsonPath("$.dataFreshness").value("EXPIRED"))
 				.andExpect(jsonPath("$.expiredRowCount").value(1))
 				.andExpect(jsonPath("$.recentLogs[0].hasError").value(true));
+	}
+
+	@Test
+	void manualRunReturnsForbiddenWhenTriggerIsDisabled() throws Exception {
+		mockMvc.perform(post("/api/sync/run"))
+				.andExpect(status().isForbidden());
+
+		verifyNoInteractions(librarySyncService);
+	}
+
+	@Test
+	void manualRunExecutesInfoThenRealtimeSyncWhenTriggerIsEnabled() throws Exception {
+		syncProperties.setManualTriggerEnabled(true);
+		SyncTargetDistrict target = new SyncTargetDistrict("Gangnam-gu", "1168000000");
+		when(librarySyncService.syncLibraryInfoForAllDistricts())
+				.thenReturn(List.of(new SyncRunResult("/info_v2", target, "SUCCESS", 28, 0)));
+		when(librarySyncService.syncRealtimeRoomsForAllDistricts())
+				.thenReturn(List.of(new SyncRunResult("/rlt_rdrm_info_v2", target, "PARTIAL_SUCCESS", 33, 2)));
+
+		mockMvc.perform(post("/api/sync/run"))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.status").value("PARTIAL_SUCCESS"))
+				.andExpect(jsonPath("$.processedRows").value(61))
+				.andExpect(jsonPath("$.skippedRows").value(2))
+				.andExpect(jsonPath("$.runs[0].endpoint").value("/info_v2"))
+				.andExpect(jsonPath("$.runs[0].district").value("Gangnam-gu"))
+				.andExpect(jsonPath("$.runs[0].stdgCd").value("1168000000"))
+				.andExpect(jsonPath("$.runs[0].processedRows").value(28))
+				.andExpect(jsonPath("$.runs[1].endpoint").value("/rlt_rdrm_info_v2"))
+				.andExpect(jsonPath("$.runs[1].status").value("PARTIAL_SUCCESS"));
 	}
 
 	private void saveLibraryWithExpiredLatest(Instant now) {
